@@ -1,0 +1,11 @@
+Agents Functions
+      1. Manage system specific MIB
+      2. Managing connections with sub agents
+      3. Gathering data from sub agents and return to manager
+      4. Generating traps to management station
+
+From raspberrypi perspective
+     1. Manage Raspberrypi machine health monitoring
+     2.Monitoring connected sensors health
+     3.Alerting warnings from raspberrypi as well as connected sensors and pushing to client (it should email me too)
+     
