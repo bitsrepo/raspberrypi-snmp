@@ -2,13 +2,20 @@ package com.raspberry.demo.server;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.snmp4j.TransportMapping;
 import org.snmp4j.agent.BaseAgent;
 import org.snmp4j.agent.CommandProcessor;
 import org.snmp4j.agent.DuplicateRegistrationException;
+import org.snmp4j.agent.MOAccess;
 import org.snmp4j.agent.MOGroup;
 import org.snmp4j.agent.ManagedObject;
+import org.snmp4j.agent.mo.DefaultMOFactory;
+import org.snmp4j.agent.mo.MOAccessImpl;
+import org.snmp4j.agent.mo.MOFactory;
+import org.snmp4j.agent.mo.MOScalar;
 import org.snmp4j.agent.mo.MOTableRow;
 import org.snmp4j.agent.mo.snmp.RowStatus;
 import org.snmp4j.agent.mo.snmp.SnmpCommunityMIB;
@@ -16,8 +23,10 @@ import org.snmp4j.agent.mo.snmp.SnmpNotificationMIB;
 import org.snmp4j.agent.mo.snmp.SnmpTargetMIB;
 import org.snmp4j.agent.mo.snmp.StorageType;
 import org.snmp4j.agent.mo.snmp.VacmMIB;
+import org.snmp4j.agent.request.SubRequest;
 import org.snmp4j.agent.security.MutableVACM;
 import org.snmp4j.mp.MPv3;
+import org.snmp4j.mp.SnmpConstants;
 import org.snmp4j.security.SecurityLevel;
 import org.snmp4j.security.SecurityModel;
 import org.snmp4j.security.USM;
@@ -32,6 +41,28 @@ import org.snmp4j.transport.TransportMappings;
 public class SNMPAgent extends BaseAgent {
 static final OID sysDescr = new OID(".1.3.6.1.2.1.1.1.0");
 
+private String strValue;
+
+    public String getStrValue() {
+        return strValue;
+    }
+
+    public void setStrValue(String strValue) {
+        this.strValue = strValue;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+
+ private MOFactory moFactory = 
+    DefaultMOFactory.getInstance();
+ 
     public static void main(String[] args) throws IOException {
         SNMPAgent agent = new SNMPAgent("0.0.0.0/2001");
 		agent.start();
@@ -40,19 +71,43 @@ static final OID sysDescr = new OID(".1.3.6.1.2.1.1.1.0");
 		// one before we register our own sysDescr. Normally you would
 		// override that method and register the MIBs that you need
 		agent.unregisterManagedObject(agent.getSnmpv2MIB());
-
+                agent.setStrValue("My first value set");
 		// Register a system description, use one from you product environment
 		// to test with
-		agent.registerManagedObject(MOCreator.createReadOnly(sysDescr,
-				"This Description is set By ShivaSoft"));
+//                shFridgeTemperature = 
+//      new ShFridgeTemperature(oidShFridgeTemperature, 
+//                              moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE));
+		agent.registerManagedObject(agent.createPortMO(sysDescr,
+				agent.getStrValue()));
 
 		// Setup the client to use our newly started agent
 		SNMPManager client = new SNMPManager("udp:127.0.0.1/2001");
 		client.start();
 		// Get back Value which is set
 		System.out.println(client.getAsString(sysDescr));
+                while(true)
+                {
+            try {
+                Thread.sleep(3000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(SNMPAgent.class.getName()).log(Level.SEVERE, null, ex);
+            }
+                }
     }
-	
+    
+    public  PortMO createPortMO(OID oid,Object value ){
+		return new PortMO(oid,
+				moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
+				);
+	}
+
+//	private static Variable getVariable(Object value) {
+//		if(value instanceof String) {
+//			return new OctetString((String)value);
+//		}
+//		throw new IllegalArgumentException("Unmanaged Type: " + value.getClass());
+//	}
+//	
     private String address;
 
 	/**
@@ -135,6 +190,11 @@ static final OID sysDescr = new OID(".1.3.6.1.2.1.1.1.0");
 				new OctetString(), VacmMIB.vacmViewIncluded,
 				StorageType.nonVolatile);
 
+                vacm.addViewTreeFamily(new OctetString("fullWriteView"), new OID("1.3"),
+				new OctetString(), VacmMIB.vacmViewIncluded,
+				StorageType.nonVolatile);
+
+                
 	}
 
 	/**
@@ -196,5 +256,32 @@ static final OID sysDescr = new OID(".1.3.6.1.2.1.1.1.0");
 	public void unregisterManagedObject(MOGroup moGroup) {
 		moGroup.unregisterMOs(server, getContext(moGroup));
 	}
+        
+        public class PortMO extends MOScalar {
+    PortMO(OID oid, MOAccess access) {
+      super(oid, access, new Integer32());
+//--AgentGen BEGIN=shAirCondTemperature
+//--AgentGen END
+    }
+
+
+
+    public Variable getValue() {
+     //--AgentGen BEGIN=shAirCondTemperature::getValue
+     //--AgentGen END
+      return  super.getValue();    
+    }
+
+    @Override
+    public int setValue(Variable newValue) {
+     //--AgentGen BEGIN=shAirCondTemperature::setValue
+     //--AgentGen END
+      return super.setValue(newValue);    
+    }
+
+     //--AgentGen BEGIN=shAirCondTemperature::_METHODS
+     //--AgentGen END
+
+  }
 
 }
