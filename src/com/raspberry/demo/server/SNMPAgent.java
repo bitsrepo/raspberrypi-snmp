@@ -1,5 +1,9 @@
 package com.raspberry.demo.server;
 
+import com.pi4j.io.gpio.GpioController;
+import com.pi4j.io.gpio.GpioFactory;
+import com.pi4j.io.gpio.GpioPinDigitalOutput;
+import com.pi4j.io.gpio.RaspiPin;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -17,6 +21,8 @@ import org.snmp4j.agent.mo.MOAccessImpl;
 import org.snmp4j.agent.mo.MOFactory;
 import org.snmp4j.agent.mo.MOScalar;
 import org.snmp4j.agent.mo.MOTableRow;
+import org.snmp4j.agent.mo.MOValueValidationEvent;
+import org.snmp4j.agent.mo.MOValueValidationListener;
 import org.snmp4j.agent.mo.snmp.RowStatus;
 import org.snmp4j.agent.mo.snmp.SnmpCommunityMIB;
 import org.snmp4j.agent.mo.snmp.SnmpNotificationMIB;
@@ -77,8 +83,10 @@ private String strValue;
 //                shFridgeTemperature = 
 //      new ShFridgeTemperature(oidShFridgeTemperature, 
 //                              moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE));
-		agent.registerManagedObject(agent.createPortMO(sysDescr,
-				agent.getStrValue()));
+                PortMO portMO=agent.createPortMO(sysDescr,
+				agent.getStrValue());
+                portMO.addMOValueValidationListener(new PortMOValidator());
+		agent.registerManagedObject(portMO);
 
 		// Setup the client to use our newly started agent
 		SNMPManager client = new SNMPManager("udp:127.0.0.1/2001");
@@ -282,6 +290,40 @@ private String strValue;
      //--AgentGen BEGIN=shAirCondTemperature::_METHODS
      //--AgentGen END
 
+  }
+        
+  static class PortMOValidator implements MOValueValidationListener {
+    
+    public void validate(MOValueValidationEvent validationEvent) {
+      Variable newValue = validationEvent.getNewValue();
+      int v = ((Integer32)newValue).getValue();
+      if(v>0)
+      {
+          try {
+              System.out.println("About to blink LED");
+              blinkLed();
+              System.out.println("LED blink over!!!!!");
+          } catch (InterruptedException ex) {
+             throw new RuntimeException(ex);
+          }
+      }    }
+
+        private void blinkLed() throws InterruptedException {
+             GpioPinDigitalOutput myLed;
+        GpioController controller=GpioFactory.getInstance();
+        myLed=controller.provisionDigitalOutputPin(RaspiPin.GPIO_07);
+        for(int i=0;i<2;i++)
+        {
+           
+                myLed.setState(true);
+                Thread.sleep(3000);
+                myLed.setState(false);
+                Thread.sleep(3000);
+            
+            
+            
+        }
+        }
   }
 
 }

@@ -8,4 +8,9 @@ From raspberrypi perspective
      1. Manage Raspberrypi machine health monitoring
      2.Monitoring connected sensors health
      3.Alerting warnings from raspberrypi as well as connected sensors and pushing to client (it should email me too)
+
+Queries agents
+Gets responses from agents
+Sets variables in agents
+Acknowledges asynchronous events from agents
      
