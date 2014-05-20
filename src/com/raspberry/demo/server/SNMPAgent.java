@@ -5,10 +5,13 @@ import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.RaspiPin;
 import com.raspberry.demo.server.mo.TempSensorMO;
+import com.raspberry.demo.server.sensor.PortAccess;
+
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
 import org.snmp4j.TransportMapping;
 import org.snmp4j.agent.BaseAgent;
 import org.snmp4j.agent.CommandProcessor;
@@ -313,14 +316,24 @@ public class PortMO extends MOScalar {
       int v = ((Integer32)newValue).getValue();
       if(v>0)
       {
-          try {
+         /* try {
               System.out.println("About to blink LED");
               blinkLed();
               System.out.println("LED blink over!!!!!");
           } catch (InterruptedException ex) {
              throw new RuntimeException(ex);
           }
-      }    }
+          
+          */
+    	  
+    	  PortAccess.setGPIO("7", true);
+    	  
+      } else {
+    	  PortAccess.setGPIO("7", false);
+      }
+      
+    
+    }
 
         private void blinkLed() throws InterruptedException {
              GpioPinDigitalOutput myLed;
