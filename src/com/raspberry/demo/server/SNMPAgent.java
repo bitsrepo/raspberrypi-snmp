@@ -4,11 +4,11 @@ import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
 import com.pi4j.io.gpio.GpioPinDigitalOutput;
 import com.pi4j.io.gpio.RaspiPin;
+import com.raspberry.demo.server.mo.TempSensorMO;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.snmp4j.TransportMapping;
 import org.snmp4j.agent.BaseAgent;
 import org.snmp4j.agent.CommandProcessor;
@@ -45,7 +45,8 @@ import org.snmp4j.smi.Variable;
 import org.snmp4j.transport.TransportMappings;
 
 public class SNMPAgent extends BaseAgent {
-static final OID sysDescr = new OID(".1.3.6.1.2.1.1.1.0");
+static final OID sysDescr   = new OID(".1.3.6.1.2.1.1.1.0");
+static final OID tempSensor = new OID(".1.3.7.1.2.1.1.1.0");
 
 private String strValue;
 
@@ -87,6 +88,11 @@ private String strValue;
 				agent.getStrValue());
                 portMO.addMOValueValidationListener(new PortMOValidator());
 		agent.registerManagedObject(portMO);
+                
+                //create and register temperature sensor MO
+                
+                TempSensorMO tmo = agent.createTempSensorMO( tempSensor);
+                agent.registerManagedObject(tmo);
 
 		// Setup the client to use our newly started agent
 		SNMPManager client = new SNMPManager("udp:127.0.0.1/2001");
@@ -105,6 +111,12 @@ private String strValue;
     
     public  PortMO createPortMO(OID oid,Object value ){
 		return new PortMO(oid,
+				moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
+				);
+	}
+
+        public  TempSensorMO createTempSensorMO(OID oid){
+		return new TempSensorMO(oid,
 				moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
 				);
 	}
@@ -264,8 +276,10 @@ private String strValue;
 	public void unregisterManagedObject(MOGroup moGroup) {
 		moGroup.unregisterMOs(server, getContext(moGroup));
 	}
+       
         
-        public class PortMO extends MOScalar {
+        
+public class PortMO extends MOScalar {
     PortMO(OID oid, MOAccess access) {
       super(oid, access, new Integer32());
 //--AgentGen BEGIN=shAirCondTemperature
