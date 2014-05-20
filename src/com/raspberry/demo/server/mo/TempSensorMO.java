@@ -6,10 +6,12 @@
 
 package com.raspberry.demo.server.mo;
 
+import com.raspberry.demo.server.sensor.TempSensor;
 import org.snmp4j.agent.MOAccess;
 import org.snmp4j.agent.mo.MOScalar;
 import org.snmp4j.smi.Integer32;
 import org.snmp4j.smi.OID;
+import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.Variable;
 
 /**
@@ -30,7 +32,11 @@ public class TempSensorMO extends MOScalar {
     public Variable getValue() {
      //--AgentGen BEGIN=shAirCondTemperature::getValue
      //--AgentGen END
-      return  super.getValue();    
+        
+        TempSensor sensor = new TempSensor();
+String temp = sensor.readTemperature();
+System.out.println("temperature=" + temp);
+      return  new OctetString(temp); //super.getValue();    
     }
 
     @Override
