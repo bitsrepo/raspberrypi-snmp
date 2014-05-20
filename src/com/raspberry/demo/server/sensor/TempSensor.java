@@ -46,7 +46,7 @@ sensorPath = w1DirPath + "/" + file.getName() + "/w1_slave";
 }
 
 public String readTemperature() {
-String strTemp = "hi";
+String strTemp = "Failed Reading From Sensor";
 if (sensorPath != null) {
 File f = new File(sensorPath);
 try (BufferedReader br = new BufferedReader(new FileReader(f))) {
