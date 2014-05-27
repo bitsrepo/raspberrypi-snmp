@@ -1,31 +1,22 @@
 package com.raspberry.demo.server;
 
-import com.pi4j.io.gpio.GpioController;
-import com.pi4j.io.gpio.GpioFactory;
-import com.pi4j.io.gpio.GpioPinDigitalOutput;
-import com.pi4j.io.gpio.RaspiPin;
+import com.raspberry.demo.server.mo.PortAccessMO;
 import com.raspberry.demo.server.mo.TempSensorMO;
-import com.raspberry.demo.server.sensor.PortAccess;
-
+import com.raspberry.demo.server.mo.validator.PortAccessMOValidator;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
 import org.snmp4j.TransportMapping;
 import org.snmp4j.agent.BaseAgent;
 import org.snmp4j.agent.CommandProcessor;
 import org.snmp4j.agent.DuplicateRegistrationException;
-import org.snmp4j.agent.MOAccess;
 import org.snmp4j.agent.MOGroup;
 import org.snmp4j.agent.ManagedObject;
 import org.snmp4j.agent.mo.DefaultMOFactory;
 import org.snmp4j.agent.mo.MOAccessImpl;
 import org.snmp4j.agent.mo.MOFactory;
-import org.snmp4j.agent.mo.MOScalar;
 import org.snmp4j.agent.mo.MOTableRow;
-import org.snmp4j.agent.mo.MOValueValidationEvent;
-import org.snmp4j.agent.mo.MOValueValidationListener;
 import org.snmp4j.agent.mo.snmp.RowStatus;
 import org.snmp4j.agent.mo.snmp.SnmpCommunityMIB;
 import org.snmp4j.agent.mo.snmp.SnmpNotificationMIB;
@@ -47,7 +38,7 @@ import org.snmp4j.transport.TransportMappings;
 
 public class SNMPAgent extends BaseAgent {
 
-    static final OID ledOut = new OID(".1.3.8.1.2.1.1.1.0");
+    static final OID ledOut     = new OID(".1.3.8.1.2.1.1.1.0");
     static final OID tempSensor = new OID(".1.3.7.1.2.1.1.1.0");
 
     private String strValue;
@@ -85,9 +76,9 @@ public class SNMPAgent extends BaseAgent {
 //                shFridgeTemperature = 
 //      new ShFridgeTemperature(oidShFridgeTemperature, 
 //                              moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE));
-        PortMO portMO = agent.createPortMO(ledOut,
+        PortAccessMO portMO = agent.createPortAccessMO(ledOut,
                 agent.getStrValue());
-        portMO.addMOValueValidationListener(new PortMOValidator());
+        portMO.addMOValueValidationListener(new PortAccessMOValidator());
         agent.registerManagedObject(portMO);
 
                 //create and register temperature sensor MO
@@ -108,8 +99,8 @@ public class SNMPAgent extends BaseAgent {
         }
     }
 
-    public PortMO createPortMO(OID oid, Object value) {
-        return new PortMO(oid,
+    public PortAccessMO createPortAccessMO(OID oid, Object value) {
+        return new PortAccessMO(oid,
                 moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
         );
     }
@@ -274,69 +265,4 @@ public class SNMPAgent extends BaseAgent {
     public void unregisterManagedObject(MOGroup moGroup) {
         moGroup.unregisterMOs(server, getContext(moGroup));
     }
-
-    public class PortMO extends MOScalar {
-
-        PortMO(OID oid, MOAccess access) {
-            super(oid, access, new Integer32());
-//--AgentGen BEGIN=shAirCondTemperature
-//--AgentGen END
-        }
-
-        public Variable getValue() {
-     //--AgentGen BEGIN=shAirCondTemperature::getValue
-            //--AgentGen END
-            return super.getValue();
-        }
-
-        @Override
-        public int setValue(Variable newValue) {
-     //--AgentGen BEGIN=shAirCondTemperature::setValue
-            //--AgentGen END
-            return super.setValue(newValue);
-        }
-
-     //--AgentGen BEGIN=shAirCondTemperature::_METHODS
-        //--AgentGen END
-    }
-
-    static class PortMOValidator implements MOValueValidationListener {
-
-        public void validate(MOValueValidationEvent validationEvent) {
-            Variable newValue = validationEvent.getNewValue();
-            int v = ((Integer32) newValue).getValue();
-            if (v > 0) {
-                /* try {
-                 System.out.println("About to blink LED");
-                 blinkLed();
-                 System.out.println("LED blink over!!!!!");
-                 } catch (InterruptedException ex) {
-                 throw new RuntimeException(ex);
-                 }
-          
-                 */
-
-                PortAccess.setGPIO("7", true);
-
-            } else {
-                PortAccess.setGPIO("7", false);
-            }
-
-        }
-
-        private void blinkLed() throws InterruptedException {
-            GpioPinDigitalOutput myLed;
-            GpioController controller = GpioFactory.getInstance();
-            myLed = controller.provisionDigitalOutputPin(RaspiPin.GPIO_07);
-            for (int i = 0; i < 2; i++) {
-
-                myLed.setState(true);
-                Thread.sleep(3000);
-                myLed.setState(false);
-                Thread.sleep(3000);
-
-            }
-        }
-    }
-
 }

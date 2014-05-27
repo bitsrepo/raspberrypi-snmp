@@ -3,7 +3,6 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 package com.raspberry.demo.server.mo;
 
 import com.raspberry.demo.server.sensor.TempSensor;
@@ -18,35 +17,23 @@ import org.snmp4j.smi.Variable;
  *
  * @author mitthoma
  */
-        
 public class TempSensorMO extends MOScalar {
-    
-   public  TempSensorMO(OID oid, MOAccess access) {
-      super(oid, access, new Integer32());
-//--AgentGen BEGIN=shAirCondTemperature
-//--AgentGen END
+
+    public TempSensorMO(OID oid, MOAccess access) {
+        super(oid, access, new Integer32());
     }
 
-
-
+    @Override
     public Variable getValue() {
-     //--AgentGen BEGIN=shAirCondTemperature::getValue
-     //--AgentGen END
-        
         TempSensor sensor = new TempSensor();
-String temp = sensor.readTemperature();
-System.out.println("temperature=" + temp);
-      return  new OctetString(temp); //super.getValue();    
+        String temp = sensor.readTemperature();
+        System.out.println("temperature=" + temp);
+        return new OctetString(temp);     
     }
 
     @Override
     public int setValue(Variable newValue) {
-     //--AgentGen BEGIN=shAirCondTemperature::setValue
-     //--AgentGen END
-      return super.setValue(newValue);    
+        return super.setValue(newValue);
     }
 
-     //--AgentGen BEGIN=shAirCondTemperature::_METHODS
-     //--AgentGen END
-
-  }
+}

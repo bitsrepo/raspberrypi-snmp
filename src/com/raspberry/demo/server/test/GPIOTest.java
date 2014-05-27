@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package com.raspberry.demo.server;
+package com.raspberry.demo.server.test;
 
 import com.pi4j.io.gpio.GpioController;
 import com.pi4j.io.gpio.GpioFactory;
