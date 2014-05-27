@@ -1,3 +1,8 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
 package com.raspberry.demo.server;
 
 import com.raspberry.demo.server.mo.PortAccessMO;
@@ -36,88 +41,16 @@ import org.snmp4j.smi.OctetString;
 import org.snmp4j.smi.Variable;
 import org.snmp4j.transport.TransportMappings;
 
+/**
+ *
+ * @author VAIO
+ */
+
 public class SNMPAgent extends BaseAgent {
 
-    static final OID ledOut     = new OID(".1.3.8.1.2.1.1.1.0");
+    // todo make this configurable
+    static final OID ledOut = new OID(".1.3.8.1.2.1.1.1.0");
     static final OID tempSensor = new OID(".1.3.7.1.2.1.1.1.0");
-
-    private String strValue;
-
-    public String getStrValue() {
-        return strValue;
-    }
-
-    public void setStrValue(String strValue) {
-        this.strValue = strValue;
-    }
-
-    public String getAddress() {
-        return address;
-    }
-
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    private MOFactory moFactory
-            = DefaultMOFactory.getInstance();
-
-    public static void main(String[] args) throws IOException {
-        SNMPAgent agent = new SNMPAgent("0.0.0.0/161");
-        agent.start();
-
-		// Since BaseAgent registers some MIBs by default we need to unregister
-        // one before we register our own ledOut. Normally you would
-        // override that method and register the MIBs that you need
-        agent.unregisterManagedObject(agent.getSnmpv2MIB());
-        agent.setStrValue("My first value set");
-		// Register a system description, use one from you product environment
-        // to test with
-//                shFridgeTemperature = 
-//      new ShFridgeTemperature(oidShFridgeTemperature, 
-//                              moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE));
-        PortAccessMO portMO = agent.createPortAccessMO(ledOut,
-                agent.getStrValue());
-        portMO.addMOValueValidationListener(new PortAccessMOValidator());
-        agent.registerManagedObject(portMO);
-
-                //create and register temperature sensor MO
-        TempSensorMO tmo = agent.createTempSensorMO(tempSensor);
-        agent.registerManagedObject(tmo);
-
-        // Setup the client to use our newly started agent
-        SNMPManager client = new SNMPManager("udp:127.0.0.1/161");
-        client.start();
-        // Get back Value which is set
-        System.out.println(client.getAsString(ledOut));
-        while (true) {
-            try {
-                Thread.sleep(3000);
-            } catch (InterruptedException ex) {
-                Logger.getLogger(SNMPAgent.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        }
-    }
-
-    public PortAccessMO createPortAccessMO(OID oid, Object value) {
-        return new PortAccessMO(oid,
-                moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
-        );
-    }
-
-    public TempSensorMO createTempSensorMO(OID oid) {
-        return new TempSensorMO(oid,
-                moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
-        );
-    }
-
-//	private static Variable getVariable(Object value) {
-//		if(value instanceof String) {
-//			return new OctetString((String)value);
-//		}
-//		throw new IllegalArgumentException("Unmanaged Type: " + value.getClass());
-//	}
-//	
     private String address;
 
     /**
@@ -128,14 +61,8 @@ public class SNMPAgent extends BaseAgent {
     public SNMPAgent(String address) throws IOException {
 
         /**
-         * Creates a base agent with boot-counter, config file, and a
-         * CommandProcessor for processing SNMP requests. Parameters:
-         * "bootCounterFile" - a file with serialized boot-counter information
-         * (read/write). If the file does not exist it is created on shutdown of
-         * the agent. "configFile" - a file with serialized configuration
-         * information (read/write). If the file does not exist it is created on
-         * shutdown of the agent. "commandProcessor" - the CommandProcessor
-         * instance that handles the SNMP requests.
+         * Agent with boot-counter, config file, and a CommandProcessor for
+         * processing SNMP requests.
          */
         super(new File("conf.agent"), new File("bootCounter.agent"),
                 new CommandProcessor(
@@ -145,6 +72,8 @@ public class SNMPAgent extends BaseAgent {
 
     /**
      * Adds community to security name mappings needed for SNMPv1 and SNMPv2c.
+     *
+     * @param communityMIB
      */
     @Override
     protected void addCommunities(SnmpCommunityMIB communityMIB) {
@@ -164,25 +93,30 @@ public class SNMPAgent extends BaseAgent {
 
     /**
      * Adds initial notification targets and filters.
+     *
+     * @param arg0
+     * @param arg1
      */
     @Override
     protected void addNotificationTargets(SnmpTargetMIB arg0,
             SnmpNotificationMIB arg1) {
-        // TODO Auto-generated method stub
 
     }
 
     /**
      * Adds all the necessary initial users to the USM.
+     *
+     * @param arg0
      */
     @Override
     protected void addUsmUser(USM arg0) {
-        // TODO Auto-generated method stub
 
     }
 
     /**
      * Adds initial VACM configuration.
+     *
+     * @param vacm
      */
     @Override
     protected void addViews(VacmMIB vacm) {
@@ -224,6 +158,7 @@ public class SNMPAgent extends BaseAgent {
 
     }
 
+    @Override
     protected void initTransportMappings() throws IOException {
         transportMappings = new TransportMapping[1];
         Address addr = GenericAddress.parse(address);
@@ -241,10 +176,8 @@ public class SNMPAgent extends BaseAgent {
     public void start() throws IOException {
 
         init();
-		// This method reads some old config from a file and causes
-        // unexpected behavior.
-        // loadConfig(ImportModes.REPLACE_CREATE);
         addShutdownHook();
+         // todo make this configurable
         getServer().addContext(new OctetString("public"));
         finishInit();
         run();
@@ -253,6 +186,8 @@ public class SNMPAgent extends BaseAgent {
 
     /**
      * Clients can register the MO they need
+     *
+     * @param mo
      */
     public void registerManagedObject(ManagedObject mo) {
         try {
@@ -265,4 +200,55 @@ public class SNMPAgent extends BaseAgent {
     public void unregisterManagedObject(MOGroup moGroup) {
         moGroup.unregisterMOs(server, getContext(moGroup));
     }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    private final MOFactory moFactory
+            = DefaultMOFactory.getInstance();
+
+    public static void main(String[] args) throws IOException {
+        SNMPAgent agent = new SNMPAgent("0.0.0.0/161");
+        agent.start();
+        PortAccessMO portMO = agent.createPortAccessMO(ledOut);
+        portMO.addMOValueValidationListener(new PortAccessMOValidator());
+        agent.registerManagedObject(portMO);
+
+        //create and register temperature sensor MO
+        TempSensorMO tmo = agent.createTempSensorMO(tempSensor);
+        agent.registerManagedObject(tmo);
+
+        // Setup the client to use our newly started agent
+        SNMPManager client = new SNMPManager("udp:127.0.0.1/161");
+        client.start();
+        // Get back Value which is set
+        System.out.println(client.getAsString(ledOut));
+        while (true) {
+            // keep main thread running, 
+            // a deamon thread runs in background and process snmp requests
+            try {
+                Thread.sleep(60000);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(SNMPAgent.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+    }
+
+    public PortAccessMO createPortAccessMO(OID oid) {
+        return new PortAccessMO(oid,
+                moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
+        );
+    }
+
+    public TempSensorMO createTempSensorMO(OID oid) {
+        return new TempSensorMO(oid,
+                moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
+        );
+    }
+
 }
