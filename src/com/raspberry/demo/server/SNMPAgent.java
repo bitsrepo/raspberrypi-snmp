@@ -45,7 +45,6 @@ import org.snmp4j.transport.TransportMappings;
  *
  * @author VAIO
  */
-
 public class SNMPAgent extends BaseAgent {
 
     // todo make this configurable
@@ -177,7 +176,7 @@ public class SNMPAgent extends BaseAgent {
 
         init();
         addShutdownHook();
-         // todo make this configurable
+        // todo make this configurable
         getServer().addContext(new OctetString("public"));
         finishInit();
         run();
@@ -212,6 +211,18 @@ public class SNMPAgent extends BaseAgent {
     private final MOFactory moFactory
             = DefaultMOFactory.getInstance();
 
+    public PortAccessMO createPortAccessMO(OID oid) {
+        return new PortAccessMO(oid,
+                moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
+        );
+    }
+
+    public TempSensorMO createTempSensorMO(OID oid) {
+        return new TempSensorMO(oid,
+                moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
+        );
+    }
+
     public static void main(String[] args) throws IOException {
         SNMPAgent agent = new SNMPAgent("0.0.0.0/161");
         agent.start();
@@ -226,8 +237,9 @@ public class SNMPAgent extends BaseAgent {
         // Setup the client to use our newly started agent
         SNMPManager client = new SNMPManager("udp:127.0.0.1/161");
         client.start();
-        // Get back Value which is set
-        System.out.println(client.getAsString(ledOut));
+        // read a test value
+        System.out.println(client.getAsString(tempSensor));
+
         while (true) {
             // keep main thread running, 
             // a deamon thread runs in background and process snmp requests
@@ -237,18 +249,6 @@ public class SNMPAgent extends BaseAgent {
                 Logger.getLogger(SNMPAgent.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-    }
-
-    public PortAccessMO createPortAccessMO(OID oid) {
-        return new PortAccessMO(oid,
-                moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
-        );
-    }
-
-    public TempSensorMO createTempSensorMO(OID oid) {
-        return new TempSensorMO(oid,
-                moFactory.createAccess(MOAccessImpl.ACCESSIBLE_FOR_READ_WRITE)
-        );
     }
 
 }
